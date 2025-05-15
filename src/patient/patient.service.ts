@@ -1,60 +1,80 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PatientResponse } from '../common/dto/patient-response.dto';
-import { Patients } from 'src/common/db/patient';
 import { PatientRequest } from 'src/common/dto/patient-request.dto';
 import { PatientAlreadyDefinedException } from 'src/common/exceptions/patient-already-defined.exception';
+import { PrismaService } from '../prisma/prisma.service';
+import { patient } from '../../generated/prisma/index';
+import { equal } from 'assert';
 
 @Injectable()
 export class PatientService {
-  getPatientById(patientId: number): PatientResponse {
-    console.log("1")
-    const patient: PatientResponse | undefined = Patients.find(
-      (patient) => patient.id === patientId,
-    );
+  constructor(private readonly prismaService: PrismaService) {}
+
+  async getPatientById(patientId: number): Promise<PatientResponse> {
+    console.log('1');
+    const patient = await this.prismaService.patient.findUnique({
+      where: { id: patientId },
+    });
     if (!patient) throw new NotFoundException('Patient not found!!');
     return patient;
   }
 
-  getPatient(): PatientResponse[] {
-    console.log("2")
-    return Patients;
+  async getPatient(): Promise<PatientResponse[]> {
+    console.log('2');
+    return this.prismaService.patient.findMany();
   }
 
-  createPatient(patientRequest: PatientRequest): PatientResponse {
-    console.log("3")
-    const index = Patients.findIndex(
-      (patient) =>
-        patient.name.toLowerCase() === patientRequest.name.toLowerCase(),
-    );
-    if (index !== -1)
+  async createPatient(
+    patientRequest: PatientRequest,
+  ): Promise<PatientResponse> {
+    console.log('3');
+    const existing = await this.prismaService.patient.findFirst({
+      where: {
+        name: {
+          equals: patientRequest.name.toLowerCase(),
+          mode: 'insensitive',
+        },
+      },
+    });
+    console.log(existing);
+    if (existing) {
       throw new PatientAlreadyDefinedException(patientRequest.name);
-    const patient: PatientResponse = {
-      id: Patients.length + 1,
-      name: patientRequest.name,
-    };
-    Patients.push(patient);
-    return patient;
+    }
+
+    return this.prismaService.patient.create({
+      data: {
+        name: patientRequest.name,
+      },
+    });
   }
 
-  deletePatient(patientId: number) {
-    console.log("4")
-    const index = Patients.findIndex((patient) => patient.id === patientId);
-    if (index === -1) throw new NotFoundException('Patient not found!!');
-    Patients.splice(index, 1);
+  async deletePatient(patientId: number): Promise<void> {
+    console.log('4');
+    const patient = await this.prismaService.patient.findUnique({
+      where: { id: patientId },
+    });
+    if (!patient) throw new NotFoundException('Patient not found!!');
+
+    await this.prismaService.patient.delete({
+      where: { id: patientId },
+    });
   }
 
-  updatePatient(
+  async updatePatient(
     patientId: number,
     patientRequest: PatientRequest,
-  ): PatientResponse {
-    console.log("5")
-    const index = Patients.findIndex((patient) => patient.id === patientId);
-    if (index === -1) throw new NotFoundException('Patient not found!!');
-    const updatedPatient: PatientResponse = {
-      id: patientId,
-      name: patientRequest.name,
-    };
-    Patients[index] = updatedPatient;
-    return updatedPatient;
+  ): Promise<PatientResponse> {
+    console.log('5');
+    const patient = await this.prismaService.patient.findUnique({
+      where: { id: patientId },
+    });
+    if (!patient) throw new NotFoundException('Patient not found!!');
+
+    return this.prismaService.patient.update({
+      where: { id: patientId },
+      data: {
+        name: patientRequest.name,
+      },
+    });
   }
 }
