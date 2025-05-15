@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
   Post,
+  Put,
   ValidationPipe,
 } from '@nestjs/common';
 import { PatientService } from './patient.service';
@@ -27,5 +29,18 @@ export class PatientController {
   @Post()
   createPatient(@Body(ValidationPipe) patientRequest: PatientRequest) {
     return this.patientService.createPatient(patientRequest);
+  }
+
+  @Delete(':patientId')
+  deletePatient(@Param('patientId', ParseIntPipe) patientId: number) {
+    return this.patientService.deletePatient(patientId);
+  }
+
+  @Put(':patientId')
+  updatePatient(
+    @Body(ValidationPipe) patientRequest: PatientRequest,
+    @Param('patientId', ParseIntPipe) patientId: number,
+  ) {
+    return this.patientService.updatePatient(patientId, patientRequest);
   }
 }

@@ -8,7 +8,7 @@ import { PatientAlreadyDefinedException } from 'src/common/exceptions/patient-al
 export class PatientService {
   getPatientById(patientId: number): PatientResponse {
     const patient: PatientResponse | undefined = Patients.find(
-      (patient) => patient.id == patientId,
+      (patient) => patient.id === patientId,
     );
     if (!patient) throw new NotFoundException('Patient not found!!');
     return patient;
@@ -18,19 +18,38 @@ export class PatientService {
     return Patients;
   }
 
-  createPatient(patientRequest: PatientRequest) {
-    let patient: PatientResponse | undefined = Patients.find(
+  createPatient(patientRequest: PatientRequest): PatientResponse {
+    const index = Patients.findIndex(
       (patient) =>
         patient.name.toLowerCase() === patientRequest.name.toLowerCase(),
     );
-    if (patient) throw new PatientAlreadyDefinedException(patient.name);
-
-    patient = {
+    if (index !== -1)
+      throw new PatientAlreadyDefinedException(patientRequest.name);
+    const patient: PatientResponse = {
       id: Patients.length + 1,
       name: patientRequest.name,
     };
-
     Patients.push(patient);
     return patient;
+  }
+
+  deletePatient(patientId: number) {
+    const index = Patients.findIndex((patient) => patient.id === patientId);
+    if (index === -1) throw new NotFoundException('Patient not found!!');
+    Patients.splice(index, 1);
+  }
+
+  updatePatient(
+    patientId: number,
+    patientRequest: PatientRequest,
+  ): PatientResponse {
+    const index = Patients.findIndex((patient) => patient.id === patientId);
+    if (index === -1) throw new NotFoundException('Patient not found!!');
+    const updatedPatient: PatientResponse = {
+      id: patientId,
+      name: patientRequest.name,
+    };
+    Patients[index] = updatedPatient;
+    return updatedPatient;
   }
 }

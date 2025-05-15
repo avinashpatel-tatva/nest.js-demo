@@ -1,4 +1,4 @@
-import { PatientResponse } from "../dto/patient-response.dto";
+import { PatientResponse } from '../dto/patient-response.dto';
 
 export let Patients: PatientResponse[] = [
   {
