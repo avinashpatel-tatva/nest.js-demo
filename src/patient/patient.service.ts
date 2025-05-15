@@ -7,6 +7,7 @@ import { PatientAlreadyDefinedException } from 'src/common/exceptions/patient-al
 @Injectable()
 export class PatientService {
   getPatientById(patientId: number): PatientResponse {
+    console.log("1")
     const patient: PatientResponse | undefined = Patients.find(
       (patient) => patient.id === patientId,
     );
@@ -15,10 +16,12 @@ export class PatientService {
   }
 
   getPatient(): PatientResponse[] {
+    console.log("2")
     return Patients;
   }
 
   createPatient(patientRequest: PatientRequest): PatientResponse {
+    console.log("3")
     const index = Patients.findIndex(
       (patient) =>
         patient.name.toLowerCase() === patientRequest.name.toLowerCase(),
@@ -34,6 +37,7 @@ export class PatientService {
   }
 
   deletePatient(patientId: number) {
+    console.log("4")
     const index = Patients.findIndex((patient) => patient.id === patientId);
     if (index === -1) throw new NotFoundException('Patient not found!!');
     Patients.splice(index, 1);
@@ -43,6 +47,7 @@ export class PatientService {
     patientId: number,
     patientRequest: PatientRequest,
   ): PatientResponse {
+    console.log("5")
     const index = Patients.findIndex((patient) => patient.id === patientId);
     if (index === -1) throw new NotFoundException('Patient not found!!');
     const updatedPatient: PatientResponse = {
